@@ -33,17 +33,19 @@ function useTypingEffect(text, active, speed = 25) {
 }
 
 // Image imports (update paths if needed)
-import bikeImg from "./assets/vietnam-bike.png";
-import helloImg from "./assets/hello.jpg";
+import bikeImg from "./assets/vietnam-bike.webp";
+// import helloImg from "./assets/hello.webp";
 import teacherImg from "./assets/teacher.jpg";
 import twentyEightImg from "./assets/28.gif";
-import muayThaiImg from "./assets/muaythai.jpg";
-import kuskusImg from "./assets/kuskus.jpg";
-import paintingImg from "./assets/paintingclassImg.jpg";
-import throwingImg from "./assets/throwingclassImg.jpg";
-import handbuiltImg from "./assets/handbuiltclassImg.jpg";
-import combineImg from "./assets/combineclassImg.jpg";
-
+import muayThaiImg from "./assets/muaythai.webp";
+import kuskusImg from "./assets/kuskus.webp";
+import paintingImg from "./assets/paintingclassImg.webp";
+import throwingImg from "./assets/throwingclassImg.webp";
+import handbuiltImg from "./assets/handbuiltclassImg.webp";
+import combineImg from "./assets/combineclassImg.webp";
+import birthdayImg from "./assets/birthdayImg.webp";
+import moneyImg from "./assets/money.webp";
+import worryImg from "./assets/worry.jpg";
 // Details mapping for each class
 const classDetails = {
   Painting: {
@@ -52,7 +54,7 @@ const classDetails = {
       "All material (pottery tools & painting equipment)",
       "2 pieces of bisque ceramic (up,plate,mini vase,bowl)",
       "class session with instructor (max 2 hours)",
-      "Receive your masterpieces in 1-2 weeek after class (we receive self pick up/gosend/domestic shipping)",
+      "Receive your masterpieces in 1-2 weeek after class",
     ],
     img: paintingImg,
   },
@@ -63,7 +65,7 @@ const classDetails = {
       "1.5 kg of stoneware clays",
       "free glaze up to 2 pieces",
       "class session with instructor (max 2 hours)",
-      "Receive your masterpieces in 3-4 weeek after class (we receive self pick up/gosend/domestic shipping)",
+      "Receive your masterpieces in 3-4 weeek after class",
     ],
     img: throwingImg,
   },
@@ -74,7 +76,7 @@ const classDetails = {
       "1.5 kg of stoneware clays",
       "free glaze up to 2 pieces",
       "class session with instructor (max 2 hours)",
-      "Receive your masterpieces in 3-4 weeek after class (we receive self pick up/gosend/domestic shipping)",
+      "Receive your masterpieces in 3-4 weeek after class",
     ],
     img: handbuiltImg,
   },
@@ -85,7 +87,7 @@ const classDetails = {
       "2 kg of stoneware clays",
       "free glaze up to 3 pieces",
       "class session with instructor (max 2 hours)",
-      "Receive your masterpieces in 3-4 weeek after class (we receive self pick up/gosend/domestic shipping)",
+      "Receive your masterpieces in 3-4 weeek after class",
     ],
     img: combineImg,
   },
@@ -93,8 +95,8 @@ const classDetails = {
 
 // Birthday messages with optional images
 const birthdayLines = [
-  { text: "Hey my sweet babyyy 😏", img: helloImg },
-  { text: "Happy 28th Birthday for you! 🎉", img: null },
+  { text: "Hey my sweet babyyy 😏", img: null },
+  { text: "Happy 28th Birthday for you! 🎉", img: birthdayImg },
   {
     text: "Can you believe you’re officially 2️⃣8️⃣ today?",
     img: twentyEightImg,
@@ -120,7 +122,7 @@ const birthdayLines = [
   },
   {
     text: "I pray you feel safe, protected, and worry-free",
-    img: null,
+    img: worryImg,
   },
   {
     text: "So you can simply live in the moment and cherish every beautiful thing around you.",
@@ -131,8 +133,8 @@ const birthdayLines = [
     img: null,
   },
   {
-    text: "  LOTS of MONEY ",
-    img: null,
+    text: "LOTS of MONEY ",
+    img: moneyImg,
   },
   {
     text: "And wherever life takes you — know that I’m cheering for you always. 💖",
@@ -229,8 +231,17 @@ export default function BirthdayExperience() {
 
   // Preload pop sound
   useEffect(() => {
-    audioRef.current = new Audio("/pop.mp3");
+    audioRef.current = new Audio("pop.mp3");
     audioRef.current.preload = "auto";
+  }, []);
+  // ① Create a ref for the background track
+  const bgAudioRef = useRef(null);
+
+  // ② Initialize it—but don’t play yet (autoplay gets blocked)
+  useEffect(() => {
+    bgAudioRef.current = new Audio("background-music.mp3");
+    bgAudioRef.current.loop = true;
+    bgAudioRef.current.volume = 0.5;
   }, []);
 
   // Confetti on result
@@ -243,8 +254,17 @@ export default function BirthdayExperience() {
 
   // Navigation handler
   const handleNext = () => {
-    if (giftStage !== "hidden") return;
-    if (isTyping) return;
+    // On first user click, start the background track
+    if (bgAudioRef.current && bgAudioRef.current.paused) {
+      bgAudioRef.current.play().catch(() => {
+        console.log(
+          "Background play prevented by browser, will retry on next click"
+        );
+      });
+    }
+    if (giftStage !== "hidden") return; // only advance during the birthday typing stage
+    if (isTyping) return; // don’t jump forward until the current line is fully typed
+
     if (currentLine < birthdayLines.length - 1) {
       setCurrentLine((prev) => prev + 1);
     } else {
@@ -298,16 +318,19 @@ export default function BirthdayExperience() {
           className="absolute inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center text-center p-6"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="text-lg mb-4">
+          <p className="text-lg mb-4 text-orange-300 ">
             Hey! If you're on desktop, click the right arrow 👉 to move forward.
             <br />
             On phone? Just tap the right side of the screen.
+            <br />
+            Some images will load quite slow, please bear with me. it's my first
+            big app 😊
           </p>
           <button
             onClick={closeOverlay}
-            className="bg-orange-200 text-gray-800 hover:bg-orange-300 px-4 py-2 rounded"
+            className="bg-orange-200 text-gray-800 hover:bg-orange-300 active:bg-white active:text-[#F98866] transition-colors duration-100 px-4 py-2 rounded"
           >
-            ok
+            Okay!
           </button>
         </div>
       )}
@@ -325,6 +348,10 @@ export default function BirthdayExperience() {
           <p className="text-xl md:text-2xl font-semibold text-center">
             {displayedText}
           </p>
+          {/* only fire confetti on the “Happy 28th Birthday for you!” line */}
+          {currentLine === 1 && (
+            <Confetti recycle={false} numberOfPieces={200} />
+          )}
           <div className="text-sm opacity-50">👉 Tap / Click to continue</div>
         </div>
       )}
@@ -350,7 +377,7 @@ export default function BirthdayExperience() {
           <div className="w-full max-w-md">
             <div
               onClick={startQuiz}
-              className="bg-[#F98866] text-white hover:bg-white hover:text-[#F98866] p-4 rounded text-center cursor-pointer"
+              className="bg-[#F98866] text-white hover:bg-white hover:text-[#F98866] active:bg-white active:text-[#F98866] transition-colors duration-75 p-4 rounded text-center cursor-pointer"
             >
               let’s gooooo
             </div>
@@ -360,7 +387,8 @@ export default function BirthdayExperience() {
 
       {/* Quiz flow */}
       {giftStage === "quiz" && (
-        <div className="flex flex-col items-center justify-center w-full h-full px-4 ">
+        <div className="flex flex-col items-center justify-center w-full h-full px-4">
+          {/* Progress dots */}
           <div className="flex mb-4">
             {quizQuestions.map((_, i) => (
               <span
@@ -371,18 +399,30 @@ export default function BirthdayExperience() {
               />
             ))}
           </div>
+
+          {/* Question */}
           <p className="text-lg md:text-xl text-center mb-6 font-semibold">
             {quizQuestions[quizIndex].text}
           </p>
+
+          {/* Options */}
           <div className="grid gap-4 w-full max-w-md">
             {quizQuestions[quizIndex].options.map((opt, idx) => (
-              <div
+              <button
                 key={idx}
+                type="button"
                 onClick={() => selectOption(idx)}
-                className="bg-[#F98866] text-white hover:bg-white hover:text-[#F98866] p-4 rounded text-center cursor-pointer"
+                className="
+            bg-[#F98866] text-white
+            hover:bg-white hover:text-[#F98866]
+            active:bg-white active:text-[#F98866]
+            focus:outline-none
+            transition-colors duration-75
+            p-4 rounded text-center
+          "
               >
                 {opt}
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -402,7 +442,7 @@ export default function BirthdayExperience() {
               </p>
               <div
                 onClick={() => setShowDetail(true)}
-                className="bg-[#F98866] text-white hover:bg-white hover:text-[#F98866] p-4 rounded text-lg md:text-xl font-semibold"
+                className="bg-[#F98866] text-white hover:bg-white hover:text-[#F98866] active:bg-white active:text-[#F98866] transition-colors duration-75 p-4 rounded text-lg md:text-xl font-semibold"
               >
                 Enlighten Me
               </div>
@@ -429,6 +469,29 @@ export default function BirthdayExperience() {
                     <li key={i}>{item}</li>
                   ))}
                 </ul>
+                {/* Retake quiz prompt */}
+                <div className="mt-8 text-center">
+                  <p className="mb-2 text-lg">
+                    Don't like this class? Let's retake the quiz again
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowDetail(false);
+                      setGiftStage("quiz");
+                      setQuizIndex(0);
+                      // reset scores to zero
+                      setScores(
+                        Object.keys(classDetails).reduce(
+                          (acc, k) => ({ ...acc, [k]: 0 }),
+                          {}
+                        )
+                      );
+                    }}
+                    className="bg-[#F98866] text-white hover:bg-white hover:text-[#F98866] active:bg-white active:text-[#F98866] transition-colors duration-75 p-4 rounded text-lg font-semibold"
+                  >
+                    yes please 🥰
+                  </button>
+                </div>
               </div>
             </div>
           )}
