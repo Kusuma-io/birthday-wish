@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Confetti from "react-confetti";
 
 // Custom hook for typing effect
-function useTypingEffect(text, active, speed = 25) {
+function useTypingEffect(text, active, speed = 100) {
   const [displayed, setDisplayed] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
@@ -231,7 +231,7 @@ export default function BirthdayExperience() {
 
   // Preload pop sound
   useEffect(() => {
-    audioRef.current = new Audio("pop.mp3");
+    audioRef.current = new Audio("/pop.mp3");
     audioRef.current.preload = "auto";
   }, []);
   // ① Create a ref for the background track
@@ -239,7 +239,7 @@ export default function BirthdayExperience() {
 
   // ② Initialize it—but don’t play yet (autoplay gets blocked)
   useEffect(() => {
-    bgAudioRef.current = new Audio("background-music.mp3");
+    bgAudioRef.current = new Audio("/background-music.mp3");
     bgAudioRef.current.loop = true;
     bgAudioRef.current.volume = 0.5;
   }, []);
