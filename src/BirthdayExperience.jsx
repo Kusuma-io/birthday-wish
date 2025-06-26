@@ -63,6 +63,9 @@ import combineImg from "./assets/combineclassImg.webp";
 import birthdayImg from "./assets/birthdayImg.webp";
 import moneyImg from "./assets/money.webp";
 import worryImg from "./assets/worry.jpg";
+import growImg from "./assets/grow.jpg";
+import friendsImg from "./assets/friends.png";
+import joyImg from "./assets/joy2.jpg";
 import lastImg from "./assets/last.png";
 
 // Details mapping for each class
@@ -132,7 +135,7 @@ const birthdayLines = [
 
   { text: "Time sure flies huh, don't you think so?", img: null },
   {
-    text: "Anyway, here’s to diving into our new hobbies and owning every adventure 🍻",
+    text: "Anyway, here’s to diving into our hobbies and owning every adventure 🍻",
     img: null,
   },
   {
@@ -144,12 +147,20 @@ const birthdayLines = [
     img: worryImg,
   },
   {
-    text: "and I want you to live the life you love, baby.",
+    text: "and I want you to live the life you will love, baby 🥰",
     img: null,
   },
   {
-    text: "Here’s to you, my love: may this year overflow with joy, peace, and....",
-    img: null,
+    text: "Here’s to you, my baby: may you have tons of joy,",
+    img: joyImg,
+  },
+  {
+    text: "fun hangs with friends,",
+    img: friendsImg,
+  },
+  {
+    text: "a life that keeps pushing you to grow and....",
+    img: growImg,
   },
   {
     text: "LOTS of MONEY ",
