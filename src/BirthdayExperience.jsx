@@ -1,12 +1,14 @@
 // BirthdayExperience.jsx
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import Confetti from "react-confetti";
 
 // Custom hook for typing effect
-function useTypingEffect(text, active, speed = 100) {
+function useTypingEffect(text, active, speed = 50) {
   const [displayed, setDisplayed] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const intervalRef = useRef(null);
+  const soundRef = useRef(null);
 
   useEffect(() => {
     if (!active) {
@@ -14,22 +16,37 @@ function useTypingEffect(text, active, speed = 100) {
       setIsTyping(false);
       return;
     }
+    soundRef.current = new Audio("./typing.mp3");
+    soundRef.current.volume = 0.4;
     let idx = 0;
     setDisplayed("");
     setIsTyping(true);
-    const id = setInterval(() => {
+
+    intervalRef.current = setInterval(() => {
       if (idx < text.length) {
-        setDisplayed((prev) => text.slice(0, idx + 1));
+        setDisplayed(text.slice(0, idx + 1));
+        soundRef.current.currentTime = 0;
+        soundRef.current.play();
         idx++;
       } else {
-        clearInterval(id);
+        clearInterval(intervalRef.current);
+        soundRef.current.pause();
         setIsTyping(false);
       }
     }, speed);
-    return () => clearInterval(id);
+    return () => clearInterval(intervalRef.current);
   }, [text, active, speed]);
 
-  return { displayed, isTyping };
+  // Skip typing effect and show full text immediately
+  const skip = useCallback(() => {
+    soundRef.current.pause();
+    soundRef.current.currentTime = 0;
+    clearInterval(intervalRef.current);
+    setDisplayed(text);
+    setIsTyping(false);
+  }, [text]);
+
+  return { displayed, isTyping, skip };
 }
 
 // Image imports (update paths if needed)
@@ -46,6 +63,8 @@ import combineImg from "./assets/combineclassImg.webp";
 import birthdayImg from "./assets/birthdayImg.webp";
 import moneyImg from "./assets/money.webp";
 import worryImg from "./assets/worry.jpg";
+import lastImg from "./assets/last.png";
+
 // Details mapping for each class
 const classDetails = {
   Painting: {
@@ -95,25 +114,25 @@ const classDetails = {
 
 // Birthday messages with optional images
 const birthdayLines = [
-  { text: "Hey my sweet babyyy 😏", img: null },
+  { text: "Helloo sayangkuu cintakuuuu 😏", img: null },
   { text: "Happy 28th Birthday for you! 🎉", img: birthdayImg },
   {
     text: "Can you believe you’re officially 2️⃣8️⃣ today?",
     img: twentyEightImg,
   },
   {
-    text: "I swear it was just yesterday where we had our first travel",
+    text: "Do you you remember our last travel ? It was 4 months ago 🧐",
     img: null,
   },
   {
-    text: "Flying off to Vietnam so you can learn how to ride a bike wkwkwkkwk 🛵",
+    text: "We were flying off to Vietnam so you can learn how to ride a bike 🛵",
     img: bikeImg,
   },
   { text: "Then training like pros at Superbon", img: muayThaiImg },
 
   { text: "Time sure flies huh, don't you think so?", img: null },
   {
-    text: "Here’s to diving into new hobbies and owning every adventure 🍻",
+    text: "Anyway, here’s to diving into our new hobbies and owning every adventure 🍻",
     img: null,
   },
   {
@@ -121,11 +140,11 @@ const birthdayLines = [
     img: kuskusImg,
   },
   {
-    text: "I pray you feel safe, protected, and worry-free",
+    text: "I pray for you to always feel safe, protected, and worry-free",
     img: worryImg,
   },
   {
-    text: "So you can simply live in the moment and cherish every beautiful thing around you.",
+    text: "and I want you to live the life you love, baby.",
     img: null,
   },
   {
@@ -137,8 +156,8 @@ const birthdayLines = [
     img: moneyImg,
   },
   {
-    text: "And wherever life takes you — know that I’m cheering for you always. 💖",
-    img: null,
+    text: "And wherever life takes you — know that I (and the dogs) am here for you always. 💖",
+    img: lastImg,
   },
   {
     text: "Phew, that was a lot wkwkwkwkwk",
@@ -209,13 +228,23 @@ export default function BirthdayExperience() {
   const [showDetail, setShowDetail] = useState(false);
 
   // Typing effects
-  const { displayed: displayedText, isTyping } = useTypingEffect(
+  const {
+    displayed: displayedText,
+    isTyping,
+    skip: skipBirthdayLine,
+  } = useTypingEffect(
     birthdayLines[currentLine].text,
-    giftStage === "hidden"
+    giftStage === "hidden",
+    50 // adjust speed per character here
   );
-  const { displayed: giftDisplayedText } = useTypingEffect(
+  const {
+    displayed: giftDisplayedText,
+    isTyping: introTyping,
+    skip: skipIntro,
+  } = useTypingEffect(
     giftIntroLine,
-    giftStage === "intro"
+    giftStage === "intro",
+    50 // adjust intro speed here
   );
 
   const [quizIndex, setQuizIndex] = useState(0);
@@ -228,21 +257,34 @@ export default function BirthdayExperience() {
   const [resultCategory, setResultCategory] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const audioRef = useRef(null);
+  const bgAudioRef = useRef(null);
+  const clickRef = useRef(null);
+
+  //preload click sound
+  useEffect(() => {
+    clickRef.current = new Audio("./click.mp3");
+    clickRef.current.preload = "auto";
+  }, []);
 
   // Preload pop sound
   useEffect(() => {
-    audioRef.current = new Audio("/pop.mp3");
+    audioRef.current = new Audio("./pop.mp3");
     audioRef.current.preload = "auto";
   }, []);
-  // ① Create a ref for the background track
-  const bgAudioRef = useRef(null);
 
   // ② Initialize it—but don’t play yet (autoplay gets blocked)
   useEffect(() => {
-    bgAudioRef.current = new Audio("/background-music.mp3");
+    bgAudioRef.current = new Audio("./background-music.mp3");
     bgAudioRef.current.loop = true;
     bgAudioRef.current.volume = 0.5;
   }, []);
+
+  // Helper to fire it
+  const playClick = () => {
+    if (!clickRef.current) return;
+    clickRef.current.currentTime = 0;
+    clickRef.current.play();
+  };
 
   // Confetti on result
   useEffect(() => {
@@ -254,7 +296,17 @@ export default function BirthdayExperience() {
 
   // Navigation handler
   const handleNext = () => {
-    // On first user click, start the background track
+    // If typing is in progress, skip to full text
+    if (giftStage === "hidden" && isTyping) {
+      skipBirthdayLine();
+      return;
+    }
+    if (giftStage === "intro" && introTyping) {
+      skipIntro();
+      return;
+    }
+
+    // Start background audio on first interaction
     if (bgAudioRef.current && bgAudioRef.current.paused) {
       bgAudioRef.current.play().catch(() => {
         console.log(
@@ -262,8 +314,7 @@ export default function BirthdayExperience() {
         );
       });
     }
-    if (giftStage !== "hidden") return; // only advance during the birthday typing stage
-    if (isTyping) return; // don’t jump forward until the current line is fully typed
+    if (giftStage !== "hidden") return;
 
     if (currentLine < birthdayLines.length - 1) {
       setCurrentLine((prev) => prev + 1);
@@ -342,7 +393,7 @@ export default function BirthdayExperience() {
             <img
               src={birthdayLines[currentLine].img}
               alt=""
-              className="w-full max-w-xs sm:max-w-md md:max-w-2xl object-contain border-4 border-[#F98866] rounded-[24px] shadow"
+              className="w-full max-w-xs sm:max-w-md md:max-w-2xl object-contain rounded-[24px] custom-stroke"
             />
           )}
           <p className="text-xl md:text-2xl font-semibold text-center">
@@ -376,7 +427,10 @@ export default function BirthdayExperience() {
           </p>
           <div className="w-full max-w-md">
             <div
-              onClick={startQuiz}
+              onClick={() => {
+                playClick();
+                startQuiz();
+              }}
               className="bg-[#F98866] text-white hover:bg-white hover:text-[#F98866] active:bg-white active:text-[#F98866] transition-colors duration-75 p-4 rounded text-center cursor-pointer"
             >
               let’s gooooo
@@ -411,7 +465,10 @@ export default function BirthdayExperience() {
               <button
                 key={idx}
                 type="button"
-                onClick={() => selectOption(idx)}
+                onClick={() => {
+                  playClick();
+                  selectOption(idx);
+                }}
                 className="
             bg-[#F98866] text-white
             hover:bg-white hover:text-[#F98866]
@@ -441,7 +498,10 @@ export default function BirthdayExperience() {
                 {resultCategory} Class
               </p>
               <div
-                onClick={() => setShowDetail(true)}
+                onClick={() => {
+                  playClick();
+                  setShowDetail(true);
+                }}
                 className="bg-[#F98866] text-white hover:bg-white hover:text-[#F98866] active:bg-white active:text-[#F98866] transition-colors duration-75 p-4 rounded text-lg md:text-xl font-semibold"
               >
                 Enlighten Me
@@ -476,6 +536,7 @@ export default function BirthdayExperience() {
                   </p>
                   <button
                     onClick={() => {
+                      playClick();
                       setShowDetail(false);
                       setGiftStage("quiz");
                       setQuizIndex(0);
